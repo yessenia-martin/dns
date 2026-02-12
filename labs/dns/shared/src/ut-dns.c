@@ -97,7 +97,6 @@ int main() {
             }
         }
     }
-    TDNSFree(ctx);
     close(sockfd);
     return 0;
 }

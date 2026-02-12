@@ -100,6 +100,5 @@ int main() {
     /*      - Look up the record with TDNSFind() and send a response. */
     /*    Otherwise, ignore the message. */
     close(sockfd);
-    TDNSFree(ctx);
     return 0;
 }
