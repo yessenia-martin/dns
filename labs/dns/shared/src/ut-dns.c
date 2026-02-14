@@ -22,6 +22,7 @@ int main() {
 
 
     /* PART 1 TODO: Implement a DNS nameserver for the utexas.edu zone */
+    // use sendto() and recvfrom() to obtain client's address and send responses back to the client
 
     /* 1. Create a UDP socket. */
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -60,8 +61,6 @@ int main() {
     TDNSAddRecord(ctx, "utexas.edu", "cs", NULL, "ns.cs.utexas.edu");
     /*    - Add an A record for ns.cs.utexas.edu. */
     TDNSAddRecord(ctx, "cs.utexas.edu", "ns", "128.83.144.1", NULL);
-   
-
 
     /* 5. Enter a loop to receive incoming DNS messages */
     /*    and parse each message using TDNSParseMsg(). */
@@ -85,15 +84,13 @@ int main() {
             /*    Otherwise, ignore the message. */
 
                 struct TDNSFindResult result;
-                if (TDNSFind(ctx, &response, &result)) {
+                TDNSFind(ctx, &response, &result);
                     /* Send the response back to the client */
-                    ssize_t sent_len = sendto(sockfd, result.serialized, result.len, 0, (struct sockaddr *)&client_addr, client_len);
-                    if (sent_len < 0) {
-                        perror("Failed to send response");
-                    }
-                } else {
-                    perror("Record not found");
+                ssize_t sent_len = sendto(sockfd, result.serialized, result.len, 0, (struct sockaddr *)&client_addr, client_len);
+                if (sent_len < 0) {
+                    perror("Failed to send response");
                 }
+                
             }
         }
     }
