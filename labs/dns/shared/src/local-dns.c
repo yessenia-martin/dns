@@ -191,7 +191,14 @@ int main()
                         }  else {
                                 /* 7-2. If the message is a referral response (i.e., does NOT contain an answer but contains NS info): */
                                 /*      - Extract the iterative query from the original query using TDNSGetIterQuery(). */
+                                printf("DEBUG: Non-authoritative response, nsIP=%s, nsDomain=%s\n", 
+                                response.nsIP ? response.nsIP : "NULL",
+                                response.nsDomain ? response.nsDomain : "NULL");
+        
+                                
                                 ssize_t iter_query_len = TDNSGetIterQuery(&response, query_buffer);
+                                printf("DEBUG: Extracted query, length=%ld\n", iter_query_len);
+
                                 if (iter_query_len < 0)
                                 {
                                         perror("Failed to extract iterative query");
@@ -202,8 +209,13 @@ int main()
                                 ns_addr.sin_port = htons(DNS_PORT);
                                 inet_pton(AF_INET, response.nsIP, &ns_addr.sin_addr);
 
+                                printf("DEBUG: Forwarding to %s:%d\n", response.nsIP, DNS_PORT);
+
+
                                 /*         - Forward the iterative query to the referred nameserver. */
                                 ssize_t sent_len = sendto(sockfd, query_buffer, iter_query_len, 0, (struct sockaddr *)&ns_addr, sizeof(ns_addr));
+                                printf("DEBUG: sendto returned %ld\n", sent_len);
+
                                 if (sent_len < 0)
                                 {
                                         perror("Failed to send iterative query to referred nameserver");
