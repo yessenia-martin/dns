@@ -48,8 +48,7 @@ struct dnsheader
 #define DNS_PORT 53
 #define BUFFER_SIZE 2048
 
-int main()
-{
+int main() {
         /* A few variable declarations that might be useful */
         /* You can add anything you want */
         int sockfd;
@@ -62,8 +61,7 @@ int main()
 
         /* 1. Create a UDP socket. */
         sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sockfd < 0)
-        {
+        if (sockfd < 0) {
                 perror("Failed to create socket");
                 exit(EXIT_FAILURE);
         }
@@ -75,8 +73,7 @@ int main()
         server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
         server_addr.sin_port = htons(DNS_PORT);
 
-        if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-        {
+        if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
                 perror("Failed to bind socket");
                 close(sockfd);
                 exit(EXIT_FAILURE);
@@ -85,8 +82,7 @@ int main()
         /* 3. Initialize a TDNS server context using TDNSInit(). */
         /*    This context will be used for all TDNS library calls. */
         struct TDNSServerContext *ctx = TDNSInit();
-        if (!ctx)
-        {
+        if (!ctx) {
                 perror("Failed to initialize TDNS context");
                 close(sockfd);
                 exit(EXIT_FAILURE);
@@ -101,11 +97,9 @@ int main()
 
         /* 5. Continuously receive incoming DNS messages */
         /*    and parse them using TDNSParseMsg(). */
-        while (1)
-        {
+        while (1) {
                 ssize_t recv_len = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&client_addr, &client_len);
-                if (recv_len < 0)
-                {
+                if (recv_len < 0) {
                         perror("Failed to receive data");
                         continue;
                 }
@@ -116,16 +110,13 @@ int main()
                 /* 6. If the message is a query for A, AAAA, or NS records: */
                 /*      - Look up the record using TDNSFind(). */
                 /*      - Ignore all other query types. */
-                if (msg == TDNS_QUERY)
-                {
-                        if (response.qtype == A || response.qtype == AAAA || response.qtype == NS)
-                        {
+                if (msg == TDNS_QUERY) {
+                        if (response.qtype == A || response.qtype == AAAA || response.qtype == NS) {
                                 struct TDNSFindResult result;
                                 uint8_t found = TDNSFind(ctx, &response, &result);
 
                                 /*      a. If the record exists and indicates delegation: */
-                                if (found && response.nsIP != NULL)
-                                {
+                                if (found && response.nsIP != NULL) {
                                         /*         - Send an iterative query to the delegated nameserver. */
                                         putAddrQID(ctx, response.dh->id, &client_addr);
                                         /*         - Store per-query context using putAddrQID() and putNSQID() */
@@ -139,31 +130,24 @@ int main()
                                         inet_pton(AF_INET, response.nsIP, &ns_addr.sin_addr);
 
                                         ssize_t sent_len = sendto(sockfd, buffer, recv_len, 0, (struct sockaddr *)&ns_addr, sizeof(ns_addr));
-                                        if (sent_len < 0)
-                                        {
+                                        if (sent_len < 0) {
                                                 perror("Failed to send query to delegated nameserver");
                                         }
-                                }
-                                else if (found)
-                                {
+                                } else if (found) {
                                         /*      b. If the record exists and does NOT indicate delegation: */
                                         /*         - Send a direct response back to the client. */
                                         ssize_t sent_len = sendto(sockfd, result.serialized, result.len, 0, (struct sockaddr *)&client_addr, client_len);
-                                        if (sent_len < 0)
-                                        {
+                                        if (sent_len < 0) {
                                                 perror("Failed to send response to client");
                                         }
-                                }
-                                else
-                                {
+                                } else {
                                         /*      c. If the record does NOT exist: */
                                         /*         - Send an empty response back to the client. */
                                         sendto(sockfd, result.serialized, result.len, 0, (struct sockaddr *)&client_addr, client_len);
                                 }
                         }
                 }
-                else if (msg == TDNS_RESPONSE)
-                {
+                else if (msg == TDNS_RESPONSE) {
 
                         /* 7-1. If the message is an authoritative response (i.e., contains an answer): */
                         /*      - Retrieve the original client address and NS info using */
@@ -181,8 +165,7 @@ int main()
                                 getAddrbyQID(ctx, response.dh->id, &original_client_addr);
                                 /*      - Send the completed response to the client. */
                                 ssize_t sent_len = sendto(sockfd, buffer, new_len, 0, (struct sockaddr *)&original_client_addr, sizeof(original_client_addr));
-                                if (sent_len < 0)
-                                {
+                                if (sent_len < 0) {
                                         perror("Failed to send response to client");
                                 }
                                 /*      - Delete the per-query context using delAddrQID() and delNSQID(). */
@@ -199,8 +182,7 @@ int main()
                                 ssize_t iter_query_len = TDNSGetIterQuery(&response, query_buffer);
                                 printf("DEBUG: Extracted query, length=%ld\n", iter_query_len);
 
-                                if (iter_query_len < 0)
-                                {
+                                if (iter_query_len < 0) {
                                         perror("Failed to extract iterative query");
                                 }
                                 
@@ -216,8 +198,7 @@ int main()
                                 ssize_t sent_len = sendto(sockfd, query_buffer, iter_query_len, 0, (struct sockaddr *)&ns_addr, sizeof(ns_addr));
                                 printf("DEBUG: sendto returned %ld\n", sent_len);
 
-                                if (sent_len < 0)
-                                {
+                                if (sent_len < 0) {
                                         perror("Failed to send iterative query to referred nameserver");
                                 }
                                 /*         - Update the per-query context using putNSQID(). */
