@@ -60,7 +60,7 @@ int main() {
     /*    - Add an NS record for the UTCS nameserver ns.cs.utexas.edu. */
     TDNSAddRecord(ctx, "utexas.edu", "cs", NULL, "ns.cs.utexas.edu");
     /*    - Add an A record for ns.cs.utexas.edu. */
-    TDNSAddRecord(ctx, "cs.utexas.edu", "ns", "128.83.144.1", NULL);
+    TDNSAddRecord(ctx, "cs.utexas.edu", "ns", "50.0.0.30", NULL);
 
     /* 5. Enter a loop to receive incoming DNS messages */
     /*    and parse each message using TDNSParseMsg(). */
