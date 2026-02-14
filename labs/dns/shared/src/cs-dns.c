@@ -54,7 +54,7 @@ int main() {
     /* 4. Create the cs.utexas.edu zone with TDNSCreateZone(). */
     TDNSCreateZone(ctx, "cs.utexas.edu");
     /*    - Add an A record for cs.utexas.edu using TDNSAddRecord(). */
-    TDNSAddRecord(ctx, "cs.utexas.edu", "cs", "128.83.144.1", NULL);
+    TDNSAddRecord(ctx, "cs.utexas.edu", "", "50.0.0.30", NULL);
     /*    - Add an A record for aquila.cs.utexas.edu. */
     TDNSAddRecord(ctx, "cs.utexas.edu", "aquila", "128.83.144.2", NULL);
 
@@ -68,29 +68,23 @@ int main() {
         }
 
         struct TDNSParseResult response;
-         uint8_t msg_type = TDNSParseMsg(buffer, recv_len, &response);
-        if (msg_type == TDNS_QUERY) { {
+        uint8_t msg = TDNSParseMsg(buffer, recv_len, &response);
+        if (msg == TDNS_QUERY) { 
             /* Successfully parsed the DNS message. */
             /* You can now check the query type and name in the response structure. */
             if (response.qtype == A || response.qtype == AAAA || response.qtype == NS) {
-                    /* For simplicity, we will only handle the first question in the query. */
-                    struct TDNSFindResult result;
-                    if (TDNSFind(ctx, &response, &result)) {
-                        /* Successfully found the record. */
-                        /* You can construct a DNS response message using TDNSPutNStoMessage() or similar functions. */
-                        // char response_buffer[BUFFER_SIZE];
-                        // uint64_t response_size = TDNSPutNStoMessage(response_buffer, BUFFER_SIZE, &response, find_result.nsIP, find_result.nsDomain);
+                /* For simplicity, we will only handle the first question in the query. */
+                struct TDNSFindResult result;
+                TDNSFind(ctx, &response, &result);
+                    /* Successfully found the record. */
+                    /* You can construct a DNS response message using TDNSPutNStoMessage() or similar functions. */
+                    // char response_buffer[BUFFER_SIZE];
+                    // uint64_t response_size = TDNSPutNStoMessage(response_buffer, BUFFER_SIZE, &response, find_result.nsIP, find_result.nsDomain);
 
-                        /* Send the response back to the client */
-                        ssize_t sent_len = sendto(sockfd, result.serialized, result.len, 0, (struct sockaddr *)&client_addr, client_len);
-                        if (sent_len < 0) {
-                            perror("Failed to send response");
-                        }
-                    } else {
-                        /* Record not found, you can choose to send a response indicating no such record or simply ignore the query. */
-                        // For example, you could send a response with an appropriate DNS error code.
-                        perror("Record not found");
-                    }
+                    /* Send the response back to the client */
+                ssize_t sent_len = sendto(sockfd, result.serialized, result.len, 0, (struct sockaddr *)&client_addr, client_len);
+                if (sent_len < 0) {
+                    perror("Failed to send response");
                 }
             }
         }
